@@ -120,15 +120,19 @@ function lerImagem() {
 
   document.getElementById("resenha").innerText = "⏳ Lendo imagem...";
 
-  Tesseract.recognize(file, 'eng')
+  Tesseract.recognize(file, 'por+eng', {
+    logger: m => console.log(m)
+  })
     .then(({ data: { text } }) => {
+
+      console.log("TEXTO OCR:", text);
 
       if (!text.trim()) {
         document.getElementById("resenha").innerText = "❌ Nenhum texto encontrado.";
         return;
       }
 
-      dadosExtraidos = extrairDados(text);
+      dadosExtraidos = extrairDadosMelhorado(text);
 
       resenhaTexto =
 `PLACA: ${dadosExtraidos.placa}
