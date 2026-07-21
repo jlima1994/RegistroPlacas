@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Registro SINESP</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: #0f0f0f;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+}
+
+.container {
+    width: 95%;
+    max-width: 500px;
+}
+
+h2 {
+    text-align: center;
+}
+
+input, button {
+    width: 100%;
+    margin: 6px 0;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+button {
+    background: #00c853;
+    color: white;
+    font-weight: bold;
+}
+
+.registro {
+    background: #1e1e1e;
+    margin-top: 10px;
+    padding: 12px;
+    border-radius: 8px;
+}
+
+.preview {
+    width: 100%;
+    margin-top: 8px;
+    border-radius: 6px;
+    display: none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>REGISTRO SINESP</h2>
+
+<input type="file" id="imagem" accept="image/*" onchange="previewImagem()">
+<img id="preview" class="preview">
+
+<input type="text" id="placa" placeholder="PLACA (ABC-1234 ou ABC1D23)">
+<input type="text" id="modelo" placeholder="MARCA / MODELO">
+<input type="text" id="anoModelo" placeholder="ANO MODELO">
+<input type="text" id="anoFab" placeholder="ANO FABRICAÇÃO">
+<input type="text" id="cor" placeholder="COR">
+<input type="text" id="cidade" placeholder="CIDADE / ESTADO">
+
+<button onclick="registrar()">REGISTRAR</button>
+
+<div id="lista"></div>
+
+</div>
+
+<script>
+// 🔒 VALIDAÇÃO DE PLACA
+function validarPlaca(placa) {
+    const padraoAntigo = /^[A-Z]{3}-\d{4}$/;
+    const padraoMercosul = /^[A-Z]{3}\d[A-Z]\d{2}$/;
+    return padraoAntigo.test(placa) || padraoMercosul.test(placa);
+}
+
+// 📸 PREVIEW DA IMAGEM (NÃO SALVA)
+function previewImagem() {
+    const file = document.getElementById('imagem').files[0];
+    const preview = document.getElementById('preview');
+
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function registrar() {
+    const placa = document.getElementById('placa').value.toUpperCase().trim();
+
+    if (!validarPlaca(placa)) {
+        alert("PLACA INVÁLIDA!\nUse: ABC-1234 ou ABC1D23");
+        return;
+    }
+
+    const dados = {
+        placa: placa,
+        modelo: document.getElementById('modelo').value.toUpperCase(),
+        anoModelo: document.getElementById('anoModelo').value,
+        anoFab: document.getElementById('anoFab').value,
+        cor: document.getElementById('cor').value.toUpperCase(),
+        cidade: document.getElementById('cidade').value.toUpperCase(),
+        dataHora: new Date().toLocaleString('pt-BR')
+    };
+
+    let registros = JSON.parse(localStorage.getItem('registros')) || [];
+    registros.push(dados);
+    localStorage.setItem('registros', JSON.stringify(registros));
+
+    carregar();
+    limpar();
+}
+
+function carregar() {
+    const lista = document.getElementById('lista');
+    lista.innerHTML = "";
+
+    let registros = JSON.parse(localStorage.getItem('registros')) || [];
+
+    registros.slice().reverse().forEach((r, i) => {
+        lista.innerHTML += `
+            <div class="registro">
+                <strong>${r.placa}</strong><br>
+                ${r.modelo}<br>
+                ANO: ${r.anoModelo} / ${r.anoFab}<br>
+                COR: ${r.cor}<br>
+                ${r.cidade}<br>
+                <small>${r.dataHora}</small><br>
+                <button onclick="excluir(${registros.length - 1 - i})">EXCLUIR</button>
+            </div>
+        `;
+    });
+}
+
+function excluir(index) {
+    let registros = JSON.parse(localStorage.getItem('registros')) || [];
+    registros.splice(index, 1);
+    localStorage.setItem('registros', JSON.stringify(registros));
+    carregar();
+}
+
+function limpar() {
+    document.getElementById('imagem').value = "";
+    document.getElementById('preview').style.display = "none";
+    document.getElementById('placa').value = "";
+    document.getElementById('modelo').value = "";
+    document.getElementById('anoModelo').value = "";
+    document.getElementById('anoFab').value = "";
+    document.getElementById('cor').value = "";
+    document.getElementById('cidade').value = "";
+}
+
+carregar();
+</script>
+
+</body>
+</html>
