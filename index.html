@@ -23,7 +23,7 @@ body {
     text-align: center;
 }
 
-input {
+input, select {
     width: 100%;
     padding: 12px;
     margin-bottom: 10px;
@@ -70,7 +70,11 @@ th {
 
 <input type="text" id="modelo" placeholder="Modelo">
 <input type="text" id="placa" placeholder="Placa">
-<input type="number" id="ano" placeholder="Ano">
+
+<select id="ano">
+    <option value="">Ano Modelo</option>
+</select>
+
 <input type="text" id="cidade" placeholder="Cidade">
 
 <button onclick="registrar()">Registrar</button>
@@ -82,7 +86,7 @@ th {
 <tr>
 <th>Modelo</th>
 <th>Placa</th>
-<th>Ano</th>
+<th>Ano Modelo</th>
 <th>Cidade</th>
 <th>Data e Hora</th>
 </tr>
@@ -90,28 +94,41 @@ th {
 <tbody id="corpoTabela"></tbody>
 </table>
 
-<!-- Firebase SDK (versão compatível simples) -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <script>
 
-// 🔴 COLE AQUI SEU CONFIG DO FIREBASE
+// 🔴 COLE SEU CONFIG AQUI
 const firebaseConfig = {
-    apiKey: "AIzaSyB-IpEzDag4tFUv3ijwVwyeqiPhtgOlL0Q",
-    authDomain: "sistema-veicu.firebaseapp.com",
-    projectId: "sistema-veicu",
-    storageBucket: "sistema-veicu.firebasestorage.app",
-    messagingSenderId: "984955826872",
-    appId: "1:984955826872:web:bc04704905ac8503c9ba4d"
+  apiKey: "SUA_API_KEY",
+  authDomain: "SEU_DOMINIO",
+  projectId: "SEU_PROJECT_ID",
 };
 
-// iniciar firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 
-// 🚀 REGISTRAR DADO
+// 🔢 GERAR ANOS AUTOMÁTICO
+function gerarAnos() {
+
+    const select = document.getElementById("ano");
+
+    const anoAtual = new Date().getFullYear();
+    const anoFinal = anoAtual + 1;
+
+    for (let ano = anoFinal; ano >= 1940; ano--) {
+        const option = document.createElement("option");
+        option.value = ano;
+        option.textContent = ano;
+        select.appendChild(option);
+    }
+}
+
+
+// 🚀 REGISTRAR
 function registrar() {
 
     const modelo = document.getElementById('modelo').value.toUpperCase();
@@ -187,8 +204,11 @@ function limparCampos() {
 }
 
 
-// 🔄 CARREGAR AO ABRIR
-window.onload = carregarDados;
+// 🔄 INICIALIZAÇÃO
+window.onload = () => {
+    gerarAnos();
+    carregarDados();
+};
 
 </script>
 
