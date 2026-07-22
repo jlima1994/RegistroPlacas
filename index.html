@@ -102,21 +102,27 @@ function registrar() {
         return;
     }
 
-    const dataHora = new Date().toLocaleString('pt-BR');
+    const data = new Date();
 
-    const tabela = document.querySelector("#tabela tbody");
+    const registro = {
+        modelo,
+        placa,
+        ano,
+        cidade,
+        dataISO: data.toISOString(), // usado para filtros
+        dataBR: data.toLocaleString('pt-BR')
+    };
 
-    const linha = document.createElement("tr");
+    // pegar dados existentes
+    let lista = JSON.parse(localStorage.getItem("registros")) || [];
 
-    linha.innerHTML = `
-        <td>${modelo}</td>
-        <td>${placa}</td>
-        <td>${ano}</td>
-        <td>${cidade}</td>
-        <td>${dataHora}</td>
-    `;
+    // adicionar novo
+    lista.push(registro);
 
-    tabela.appendChild(linha);
+    // salvar
+    localStorage.setItem("registros", JSON.stringify(lista));
+
+    atualizarTabela();
 
     // limpar campos
     document.getElementById('modelo').value = "";
