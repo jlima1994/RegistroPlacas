@@ -145,6 +145,38 @@ function registrar() {
         console.error("Erro:", error);
     });
 }
+
+function carregarDados() {
+
+    const tabela = document.querySelector("#tabela tbody");
+    tabela.innerHTML = "";
+
+    db.collection("registros")
+      .orderBy("data", "desc")
+      .get()
+      .then(snapshot => {
+
+        snapshot.forEach(doc => {
+
+            const reg = doc.data();
+
+            const linha = document.createElement("tr");
+
+            linha.innerHTML = `
+                <td>${reg.modelo}</td>
+                <td>${reg.placa}</td>
+                <td>${reg.ano}</td>
+                <td>${reg.cidade}</td>
+                <td>${new Date(reg.data.seconds * 1000).toLocaleString('pt-BR')}</td>
+            `;
+
+            tabela.appendChild(linha);
+        });
+    });
+}
+
+window.onload = carregarDados;
+
 </script>
 
 </body>
