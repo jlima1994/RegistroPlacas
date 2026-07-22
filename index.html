@@ -122,59 +122,72 @@ function extrairDados(texto){
 
     texto = texto.toUpperCase();
 
-    console.log("TEXTO OCR:", texto);
+    console.log("OCR BRUTO:\n", texto);
 
-    // LIMPEZA INTELIGENTE
+    // NORMALIZAÇÃO PESADA
     texto = texto
         .replace(/0/g, "O")
-        .replace(/1/g, "I");
+        .replace(/\|/g, "I")
+        .replace(/,/g, "")
+        .replace(/\s+/g, " ");
 
-    let linhas = texto.split("\n").map(l => l.trim()).filter(l => l);
+    let linhas = texto.split("\n")
+        .map(l => l.trim())
+        .filter(l => l.length > 2);
+
+    console.log("LINHAS:", linhas);
 
     let placa = null;
     let modelo = null;
-    let anoModelo = null;
     let anoFab = null;
+    let anoModelo = null;
     let cor = null;
     let cidade = null;
 
-    // 🔎 PLACA
+    // 🔎 PLACA (mais confiável)
     for(let l of linhas){
-        let m = l.match(/[A-Z]{3}[0-9][A-Z0-9][0-9]{2}/);
-        if(m){
-            placa = m[0];
+        let match = l.match(/[A-Z]{3}\s?[0-9][A-Z0-9][0-9]{2}/);
+        if(match){
+            placa = match[0].replace(" ", "");
             break;
         }
     }
 
-    // 🔎 BUSCA POR PALAVRAS CHAVE
+    // 🔎 EXTRAÇÃO POR POSIÇÃO RELATIVA
     for(let i = 0; i < linhas.length; i++){
 
         let l = linhas[i];
 
+        // MODELO
         if(l.includes("MARCA") || l.includes("MODELO")){
-            modelo = linhas[i+1] || null;
+            modelo = linhas[i+1] || modelo;
         }
 
+        // ANO MODELO
         if(l.includes("MODELO") && l.includes("ANO")){
-            anoModelo = (linhas[i+1] || "").match(/\d{4}/)?.[0];
+            let val = (linhas[i+1] || "").match(/\d{4}/);
+            if(val) anoModelo = val[0];
         }
 
+        // ANO FABRICAÇÃO
         if(l.includes("FABR")){
-            anoFab = (linhas[i+1] || "").match(/\d{4}/)?.[0];
+            let val = (linhas[i+1] || "").match(/\d{4}/);
+            if(val) anoFab = val[0];
         }
 
-        if(l === "COR"){
-            cor = linhas[i+1] || null;
+        // COR
+        if(l.includes("COR")){
+            cor = linhas[i+1] || cor;
         }
 
+        // CIDADE
         if(l.includes("CIDADE")){
-            cidade = linhas[i+1] || null;
+            cidade = linhas[i+1] || cidade;
         }
     }
 
-    // 🔧 PLANO B (fallback)
-    if(!anoModelo || !anoFab){
+    // 🔥 FALLBACK INTELIGENTE PARA ANOS
+    if(!anoFab || !anoModelo){
         let anos = texto.match(/\d{4}/g);
         if(anos && anos.length >= 2){
             anoFab = anos[0];
@@ -182,17 +195,24 @@ function extrairDados(texto){
         }
     }
 
-    // VALIDAÇÃO
-    if(!placa || !modelo || !anoModelo || !anoFab || !cor || !cidade){
+    // 🔥 LIMPEZA FINAL
+    if(modelo) modelo = modelo.replace(/[^A-Z0-9\/\.\- ]/g, "").trim();
+    if(cor) cor = cor.replace(/[^A-Z ]/g, "").trim();
+    if(cidade) cidade = cidade.replace(/[^A-Z \-]/g, "").trim();
+
+    console.log({placa, modelo, anoFab, anoModelo, cor, cidade});
+
+    // VALIDAÇÃO FINAL FLEXÍVEL
+    if(!placa || !modelo){
         return null;
     }
 
     return {
         placa,
         modelo,
-        ano: anoFab + "/" + anoModelo,
-        cor,
-        cidade
+        ano: (anoFab && anoModelo) ? `${anoFab}/${anoModelo}` : "N/I",
+        cor: cor || "N/I",
+        cidade: cidade || "N/I"
     };
 }
 function adicionarTabela(dados){
