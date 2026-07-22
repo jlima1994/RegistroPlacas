@@ -177,6 +177,31 @@ function extrairDados(texto){
         cidade: cidade || "N/I"
     };
 }
+
+function extrairAno(texto) {
+    // tenta padrão 2013/2014 ou 2013-2014
+    let match = texto.match(/(19|20)\d{2}\s*[/\-]\s*(19|20)\d{2}/);
+    if (match) return match[0];
+
+    // tenta dois anos separados (2013 2014)
+    match = texto.match(/(19|20)\d{2}\s+(19|20)\d{2}/);
+    if (match) return match[0];
+
+    // tenta anos separados em linhas diferentes
+    const linhas = texto.split("\n");
+    let anos = [];
+
+    linhas.forEach(l => {
+        const m = l.match(/(19|20)\d{2}/);
+        if (m) anos.push(m[0]);
+    });
+
+    if (anos.length >= 2) {
+        return anos[0] + "/" + anos[1];
+    }
+
+    return "NÃO IDENTIFICADO";
+}
 function adicionarTabela(dados){
 
     const tabela = document.getElementById("tabela");
