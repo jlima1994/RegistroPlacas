@@ -66,9 +66,7 @@ th {
 
 <input type="text" id="placa" placeholder="Placa">
 
-<select id="ano">
-    <option value="">Ano Modelo</option>
-</select>
+<select id="ano"></select>
 
 <input type="text" id="cidade" placeholder="Cidade">
 
@@ -93,47 +91,58 @@ th {
 </div>
 
 <!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
 <script>
 
-// 🔥 CONFIG FIREBASE (SUBSTITUA PELOS SEUS DADOS)
+// 🔥 CONFIG FIREBASE
 const firebaseConfig = {
-    apiKey: "AIzaSyB-IpEzDag4tFUv3ijwVwyeqiPhtgOlL0Q",
-    authDomain: "sistema-veicu.firebaseapp.com",
-    projectId: "sistema-veicu",
-    storageBucket: "sistema-veicu.firebasestorage.app",
-    messagingSenderId: "984955826872",
-    appId: "1:984955826872:web:bc04704905ac8503c9ba4d"
+  apiKey: "AIzaSyB-IpEzDag4tFUv3ijwVwyeqiPhtgOlL0Q",
+  authDomain: "sistema-veicu.firebaseapp.com",
+  projectId: "sistema-veicu",
+  storageBucket: "sistema-veicu.firebasestorage.app",
+  messagingSenderId: "984955826872",
+  appId: "1:984955826872:web:bc04704905ac8503c9ba4d"
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// 🔢 GERAR ANOS
+// ✅ GERAR LISTA DE ANOS (GARANTIDO)
 function gerarAnos() {
-    const select = document.getElementById("ano");
-    const anoAtual = new Date().getFullYear();
-    const anoFinal = anoAtual + 1;
 
-    for (let ano = anoFinal; ano >= 1940; ano--) {
-        let option = document.createElement("option");
+    const select = document.getElementById("ano");
+
+    // limpa antes (evita duplicação)
+    select.innerHTML = "";
+
+    const opcaoPadrao = document.createElement("option");
+    opcaoPadrao.value = "";
+    opcaoPadrao.textContent = "Ano Modelo";
+    select.appendChild(opcaoPadrao);
+
+    const anoAtual = new Date().getFullYear();
+
+    for (let ano = anoAtual + 1; ano >= 1940; ano--) {
+        const option = document.createElement("option");
         option.value = ano;
         option.textContent = ano;
         select.appendChild(option);
     }
 }
 
-// 🚗 FORMATAR PLACA AUTOMATICAMENTE
-document.getElementById("placa").addEventListener("input", function(e) {
-    let valor = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+// 🚗 FORMATAÇÃO PLACA
+document.addEventListener("input", function(e) {
+    if (e.target.id === "placa") {
+        let valor = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
 
-    if (valor.length > 3) {
-        valor = valor.slice(0,3) + "-" + valor.slice(3,7);
+        if (valor.length > 3) {
+            valor = valor.slice(0,3) + "-" + valor.slice(3,7);
+        }
+
+        e.target.value = valor;
     }
-
-    e.target.value = valor;
 });
 
 // 📝 REGISTRAR
@@ -152,21 +161,14 @@ function registrar() {
         return;
     }
 
-    const dados = {
-        modelo,
-        placa,
-        ano,
-        cidade,
-        cor,
-        dataHora
-    };
+    const dados = { modelo, placa, ano, cidade, cor, dataHora };
 
     db.ref("registros").push(dados);
 
     limparCampos();
 }
 
-// 🧹 LIMPAR CAMPOS
+// 🧹 LIMPAR
 function limparCampos() {
     document.getElementById("modelo").value = "";
     document.getElementById("placa").value = "";
@@ -175,7 +177,7 @@ function limparCampos() {
     document.getElementById("cor").value = "";
 }
 
-// 📊 CARREGAR DADOS EM TEMPO REAL
+// 📊 CARREGAR DADOS
 function carregarDados() {
 
     const tabela = document.querySelector("#tabela tbody");
@@ -188,7 +190,7 @@ function carregarDados() {
 
             const d = item.val();
 
-            const linha = `
+            tabela.innerHTML += `
                 <tr>
                     <td>${d.placa}</td>
                     <td>${d.modelo}</td>
@@ -198,18 +200,15 @@ function carregarDados() {
                     <td>${d.dataHora}</td>
                 </tr>
             `;
-
-            tabela.innerHTML += linha;
         });
-
     });
 }
 
-// 🚀 INIT
-window.onload = () => {
+// 🚀 GARANTIA DE EXECUÇÃO
+window.addEventListener("DOMContentLoaded", () => {
     gerarAnos();
     carregarDados();
-};
+});
 
 </script>
 
