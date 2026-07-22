@@ -89,7 +89,33 @@ th {
 <tbody></tbody>
 </table>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"></script>
+    
 <script>
+
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyB-IpEzDag4tFUv3ijwVwyeqiPhtgOlL0Q",
+  authDomain: "sistema-veicu.firebaseapp.com",
+  projectId: "sistema-veicu",
+  storageBucket: "sistema-veicu.firebasestorage.app",
+  messagingSenderId: "984955826872",
+  appId: "1:984955826872:web:bc04704905ac8503c9ba4d"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
+// iniciar
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
 function registrar() {
 
     const modelo = document.getElementById('modelo').value.toUpperCase();
@@ -104,31 +130,20 @@ function registrar() {
 
     const data = new Date();
 
-    const registro = {
+    db.collection("registros").add({
         modelo,
         placa,
         ano,
         cidade,
-        dataISO: data.toISOString(), // usado para filtros
-        dataBR: data.toLocaleString('pt-BR')
-    };
-
-    // pegar dados existentes
-    let lista = JSON.parse(localStorage.getItem("registros")) || [];
-
-    // adicionar novo
-    lista.push(registro);
-
-    // salvar
-    localStorage.setItem("registros", JSON.stringify(lista));
-
-    atualizarTabela();
-
-    // limpar campos
-    document.getElementById('modelo').value = "";
-    document.getElementById('placa').value = "";
-    document.getElementById('ano').value = "";
-    document.getElementById('cidade').value = "";
+        data: data
+    })
+    .then(() => {
+        alert("Salvo no Firebase!");
+        carregarDados();
+    })
+    .catch((error) => {
+        console.error("Erro:", error);
+    });
 }
 </script>
 
