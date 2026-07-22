@@ -2,48 +2,62 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Registro Sinesp</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leitor de Veículo</title>
 
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
 <style>
-body {
-  font-family: Arial;
-  text-align: center;
-  background: #f5f5f5;
-  padding: 20px;
+body{
+    font-family: Arial;
+    background:#0f172a;
+    color:#fff;
+    text-align:center;
+    padding:20px;
 }
 
-.container {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  max-width: 500px;
-  margin: auto;
+.container{
+    max-width:500px;
+    margin:auto;
 }
 
-button {
-  padding: 10px;
-  margin: 10px;
-  cursor: pointer;
+button{
+    width:100%;
+    padding:15px;
+    margin-top:10px;
+    border:none;
+    border-radius:8px;
+    background:#22c55e;
+    color:#000;
+    font-weight:bold;
+    font-size:16px;
 }
 
-#resenha {
-  margin-top: 20px;
-  white-space: pre-line;
-  text-align: left;
+input{
+    width:100%;
+    margin-top:10px;
 }
 
-table {
-  width: 100%;
-  margin-top: 20px;
-  border-collapse: collapse;
+table{
+    width:100%;
+    margin-top:20px;
+    border-collapse:collapse;
+    background:#1e293b;
 }
 
-th, td {
-  border: 1px solid #ccc;
-  padding: 8px;
-  font-size: 12px;
+th, td{
+    padding:10px;
+    border:1px solid #334155;
+    font-size:12px;
+}
+
+th{
+    background:#334155;
+}
+
+.erro{
+    color:#ef4444;
+    margin-top:10px;
 }
 </style>
 </head>
@@ -51,154 +65,121 @@ th, td {
 <body>
 
 <div class="container">
-  <h2>REGISTRO POR IMAGEM</h2>
 
-  <input type="file" id="imagem" accept="image/*"><br>
+<h2>LEITOR DE VEÍCULO</h2>
 
-  <button onclick="lerImagem()">Ler imagem</button>
-  <button onclick="registrar()">Registrar</button>
+<input type="file" id="imageInput" accept="image/*">
 
-  <div id="status"></div>
-  <div id="resenha"></div>
+<button onclick="processar()">PROCESSAR IMAGEM</button>
 
-  <table id="tabela">
-    <thead>
-      <tr>
-        <th>PLACA</th>
-        <th>MARCA/MODELO</th>
-        <th>ANO</th>
-        <th>COR</th>
-        <th>CIDADE/UF</th>
-        <th>DATA/HORA</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+<div id="status"></div>
+
+<table id="tabela" style="display:none;">
+<thead>
+<tr>
+<th>PLACA</th>
+<th>MODELO</th>
+<th>ANO</th>
+<th>COR</th>
+<th>CIDADE/UF</th>
+<th>DATA</th>
+</tr>
+</thead>
+<tbody id="corpoTabela"></tbody>
+</table>
+
 </div>
 
 <script>
 
-let dadosExtraidos = null;
+async function processar(){
 
-// 🔥 LER IMAGEM (OCR MELHORADO)
-function lerImagem() {
-  const file = document.getElementById('imagem').files[0];
-
-  if (!file) {
-    alert("Selecione uma imagem");
-    return;
-  }
-
-  document.getElementById("status").innerText = "⏳ LENDO IMAGEM...";
-
-  Tesseract.recognize(file, 'eng', {
-    tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 /-',
-  })
-  .then(({ data: { text } }) => {
-
-    console.log("OCR:", text);
-
-    dadosExtraidos = extrairDados(text);
-
-    document.getElementById("status").innerText = "✅ IMAGEM PROCESSADA";
-
-  })
-  .catch(() => {
-    document.getElementById("status").innerText = "❌ ERRO AO LER IMAGEM";
-  });
-}
-
-
-// 🔥 EXTRAÇÃO INTELIGENTE
-function extrairDados(texto) {
-
-  texto = texto.toUpperCase();
-
-  function buscar(regex) {
-    const m = texto.match(regex);
-    return m ? m[0].trim() : "-";
-  }
-
-  // PLACA (foco principal)
-  let placa = "-";
-  let match = texto.match(/\b[A-Z]{3}[0-9][A-Z0-9][0-9]{2}\b/);
-
-  if (match) {
-    placa = match[0];
-  } else {
-    let t = texto.replace(/\s/g, "");
-    let match2 = t.match(/[A-Z]{3}[0-9][A-Z0-9][0-9]{2}/);
-    if (match2) placa = match2[0];
-  }
-
-  // ANO
-  let ano = buscar(/\b(20\d{2}|19\d{2})\b/);
-
-  // COR
-  let cor = buscar(/PRETO|BRANCO|PRATA|VERMELHO|AZUL|CINZA|VERDE/);
-
-  // MARCA
-  let marca = "-";
-  const marcas = ["TOYOTA","HONDA","FORD","FIAT","VW","VOLKSWAGEN","CHEVROLET","HYUNDAI"];
-
-  for (let m of marcas) {
-    let r = new RegExp(m + "[A-Z0-9\\s/-]*");
-    let res = texto.match(r);
-    if (res) {
-      marca = res[0];
-      break;
+    const file = document.getElementById('imageInput').files[0];
+    if(!file){
+        alert("Selecione uma imagem");
+        return;
     }
-  }
 
-  // CIDADE
-  let cidade = "-";
-  let c = texto.match(/[A-Z\s]{3,}\/[A-Z]{2}/);
-  if (c) cidade = c[0];
+    document.getElementById("status").innerText = "LENDO IMAGEM...";
 
-  return { placa, marca, ano, cor, cidade };
+    const { data: { text } } = await Tesseract.recognize(file, 'por');
+
+    console.log(text);
+
+    let resultado = extrairDados(text);
+
+    if(!resultado){
+        document.getElementById("status").innerHTML = "<div class='erro'>ERRO AO IDENTIFICAR DADOS</div>";
+        return;
+    }
+
+    adicionarTabela(resultado);
+
+    document.getElementById("status").innerText = "SUCESSO";
 }
 
+function extrairDados(texto){
 
-// 🔥 REGISTRAR
-function registrar() {
+    texto = texto.toUpperCase();
 
-  if (!dadosExtraidos) {
-    alert("Leia a imagem primeiro");
-    return;
-  }
+    // PLACA
+    let placaMatch = texto.match(/[A-Z]{3}[0-9][A-Z0-9][0-9]{2}/);
+    let placa = placaMatch ? placaMatch[0] : null;
 
-  const dataHora = new Date().toLocaleString("pt-BR");
+    // MODELO
+    let modeloMatch = texto.match(/MARCA\/MODELO\s*(.*)/);
+    let modelo = modeloMatch ? modeloMatch[1].split("\n")[0] : null;
 
-  const resenha =
-`PLACA: ${dadosExtraidos.placa}
-MARCA/MODELO: ${dadosExtraidos.marca}
-ANO: ${dadosExtraidos.ano}
-COR: ${dadosExtraidos.cor}
-CIDADE/UF: ${dadosExtraidos.cidade}
-DATA/HORA: ${dataHora}`;
+    // ANO MODELO
+    let anoModeloMatch = texto.match(/ANO DO MODELO\s*(\d{4})/);
+    let anoModelo = anoModeloMatch ? anoModeloMatch[1] : null;
 
-  // 🔥 MOSTRA RESENHA APENAS AGORA
-  document.getElementById("resenha").innerText = resenha;
+    // ANO FABRICAÇÃO
+    let anoFabMatch = texto.match(/ANO DE FABRICAÇÃO\s*(\d{4})/);
+    let anoFab = anoFabMatch ? anoFabMatch[1] : null;
 
-  // 🔥 INSERE NA TABELA
-  const tabela = document.querySelector("#tabela tbody");
+    // COR
+    let corMatch = texto.match(/COR\s*(.*)/);
+    let cor = corMatch ? corMatch[1].split("\n")[0] : null;
 
-  const linha = `
-<tr>
-<td>${dadosExtraidos.placa}</td>
-<td>${dadosExtraidos.marca}</td>
-<td>${dadosExtraidos.ano}</td>
-<td>${dadosExtraidos.cor}</td>
-<td>${dadosExtraidos.cidade}</td>
-<td>${dataHora}</td>
-</tr>
-`;
+    // CIDADE
+    let cidadeMatch = texto.match(/CIDADE\/ESTADO\s*(.*)/);
+    let cidade = cidadeMatch ? cidadeMatch[1].split("\n")[0] : null;
 
-  tabela.innerHTML += linha;
+    if(!placa || !modelo || !anoModelo || !anoFab || !cor || !cidade){
+        return null;
+    }
 
-  // limpa estado
-  dadosExtraidos = null;
-  document.getElementById("status").innerText = "✅ REGISTRADO COM SUCESSO";
+    return {
+        placa,
+        modelo,
+        ano: anoFab + "/" + anoModelo,
+        cor,
+        cidade
+    };
+}
+
+function adicionarTabela(dados){
+
+    const tabela = document.getElementById("tabela");
+    const corpo = document.getElementById("corpoTabela");
+
+    tabela.style.display = "table";
+
+    let dataHora = new Date().toLocaleString("pt-BR");
+
+    let linha = `
+    <tr>
+        <td>${dados.placa}</td>
+        <td>${dados.modelo}</td>
+        <td>${dados.ano}</td>
+        <td>${dados.cor}</td>
+        <td>${dados.cidade}</td>
+        <td>${dataHora}</td>
+    </tr>
+    `;
+
+    corpo.innerHTML += linha;
 }
 
 </script>
