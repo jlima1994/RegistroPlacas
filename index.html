@@ -3,145 +3,107 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Leitura de Veículo</title>
+
+<title>Cadastro de Veículo</title>
 
 <style>
 body {
-    font-family: Arial;
-    text-align: center;
-    background: #f4f4f4;
-    padding: 20px;
+    font-family: Arial, sans-serif;
+    background: #f5f5f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
 }
 
-input, button {
-    margin: 10px;
-    padding: 10px;
-    width: 90%;
-    max-width: 300px;
-}
-
-table {
-    margin-top: 20px;
-    width: 100%;
+.container {
     background: white;
-    border-collapse: collapse;
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 350px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    text-align: center;
 }
 
-th, td {
-    padding: 10px;
-    border: 1px solid #ddd;
+h2 {
+    margin-bottom: 20px;
 }
 
-th {
-    background: #333;
+input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background: #2e7d32;
     color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
+button:hover {
+    background: #1b5e20;
 }
 </style>
 </head>
 
 <body>
 
-<h2>LEITURA DE VEÍCULO</h2>
+<div class="container">
 
-<input type="file" id="imagem" accept="image/*">
-<br>
-<button onclick="processarImagem()">Ler Imagem</button>
+<h2>CADASTRO DE VEÍCULO</h2>
 
-<h3>DADOS EXTRAÍDOS</h3>
-
-<p><b>PLACA:</b> <span id="placa"></span></p>
-<p><b>FABRICANTE/MODELO:</b> <span id="modelo"></span></p>
-<p><b>COR:</b> <span id="cor"></span></p>
+<input type="text" id="modelo" placeholder="Modelo">
+<input type="text" id="placa" placeholder="Placa (ABC1D23 ou ABC1234)">
+<input type="number" id="ano" placeholder="Ano">
+<input type="text" id="cidade" placeholder="Cidade">
 
 <button onclick="registrar()">Registrar</button>
 
-<table id="tabela">
-<thead>
-<tr>
-<th>Placa</th>
-<th>Fabricante/Modelo</th>
-<th>Cor</th>
-<th>Data e Hora</th>
-</tr>
-</thead>
-<tbody></tbody>
-</table>
-
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+</div>
 
 <script>
-
-function processarImagem() {
-    const file = document.getElementById('imagem').files[0];
-
-    if (!file) {
-        alert("Selecione uma imagem");
-        return;
-    }
-
-    Tesseract.recognize(
-        file,
-        'por',
-        { logger: m => console.log(m) }
-    ).then(({ data: { text } }) => {
-
-        console.log(text);
-
-        // PLACA (ABC1D23 ou ABC1234)
-        const placaMatch = text.match(/[A-Z]{3}[0-9][A-Z0-9][0-9]{2}|[A-Z]{3}[0-9]{4}/);
-        const placa = placaMatch ? placaMatch[0] : "NÃO ENCONTRADO";
-
-        // MODELO (linha maior geralmente)
-        const linhas = text.split('\n').filter(l => l.trim() !== "");
-        const modelo = linhas.length > 1 ? linhas[1] : "NÃO ENCONTRADO";
-
-        // COR (palavras comuns)
-        const cores = ["BRANCO","PRETO","PRATA","VERMELHO","AZUL","CINZA"];
-        let cor = "NÃO ENCONTRADO";
-
-        cores.forEach(c => {
-            if (text.toUpperCase().includes(c)) {
-                cor = c;
-            }
-        });
-
-        document.getElementById('placa').innerText = placa;
-        document.getElementById('modelo').innerText = modelo;
-        document.getElementById('cor').innerText = cor;
-    });
-}
-
 function registrar() {
-    const placa = document.getElementById('placa').innerText;
-    const modelo = document.getElementById('modelo').innerText;
-    const cor = document.getElementById('cor').innerText;
 
-    if (placa === "") {
-        alert("Leia a imagem primeiro");
+    const modelo = document.getElementById('modelo').value.toUpperCase();
+    const placa = document.getElementById('placa').value.toUpperCase();
+    const ano = document.getElementById('ano').value;
+    const cidade = document.getElementById('cidade').value.toUpperCase();
+
+    if (!modelo || !placa || !ano || !cidade) {
+        alert("Preencha todos os campos");
         return;
     }
 
+    // Data e hora automática
     const dataHora = new Date().toLocaleString('pt-BR');
 
-    const tabela = document.querySelector("#tabela tbody");
+    const registro = {
+        modelo,
+        placa,
+        ano,
+        cidade,
+        dataHora
+    };
 
-    const linha = document.createElement("tr");
+    console.log(registro);
 
-    linha.innerHTML = `
-        <td>${placa}</td>
-        <td>${modelo}</td>
-        <td>${cor}</td>
-        <td>${dataHora}</td>
-    `;
+    alert("Registro salvo com sucesso!");
 
-    tabela.appendChild(linha);
-
-    // limpar tela (opcional)
-    document.getElementById('placa').innerText = "";
-    document.getElementById('modelo').innerText = "";
-    document.getElementById('cor').innerText = "";
+    // limpar campos
+    document.getElementById('modelo').value = "";
+    document.getElementById('placa').value = "";
+    document.getElementById('ano').value = "";
+    document.getElementById('cidade').value = "";
 }
-
 </script>
 
 </body>
